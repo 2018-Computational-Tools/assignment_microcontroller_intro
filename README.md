@@ -26,7 +26,7 @@ Note: technically you only need the CLI and can do everything from command line 
 
 ## Claim your photon
 
-Connect to your photon and setup up the wireless. Note that all course photons have been white-listed with OIT in advance so you can use them on the regular `UCB Wirless` network without a network password. Also note that you can only claim/setup a photon if it is not already claimed (i.e. associated with another account) for security reasons, and if it is in listening mode (blinking dark blue).
+Connect to your photon and set up the wireless. Note that all course photons have been white-listed with OIT in advance so you can use them on the regular `UCB Wirless` network without a network password. Also note that you can only claim/setup a photon if it is not already claimed (i.e. associated with another account) for security reasons, and if it is in listening mode (blinking dark blue).
 
 - via CLI (from terminal):
   - `particle login` (if you are not already logged in)
@@ -103,18 +103,88 @@ While your photon can run on its own away from your computer and you can flash c
 
 ## Exercise #2: Reading analog data
 
-
+- assemble the photosensor circuit as discussed in class.
+- modify your program as follows:
+  - outside functions, add:
+  ```C++
+  const int cds_pin = A0;
+  int cds_reading;
+  ```
+  - in the **setup** function, add:
+  ```C++
+  pinMode(cds_pin, INPUT);
+  ```
+  - in the **loop** function, add:
+  ```C++
+  cds_reading = analogRead(cds_pin);
+  Serial.print("Analog reading = ");
+  Serial.println(cds_reading);
+  ```
 
 
 ## Exercise #3: Reacting to analog data
 
 
-
+- add the LED circuit as discussed in class.
+- modify your program as follows:
+  - outside functions, add:
+  ```C++
+  const int led_pin = D0;
+  ```
+  - in the **setup** function, add:
+  ```C++
+  pinMode(led_pin, OUTPUT);
+  ```
+  - in the **loop** function, add:
+  ```C++
+  int led_brightness = map(cds_reading, 0, 4095, 0, 255);
+  analogWrite(led_pin, led_brightness);
+  ```
+- switch to interval based events instead of delay
+  - outside functions, add:
+  ```C++
+  const uint interval = 1000;
+  unsigned long last_time;
+  ```
+  - in the **setup** function, add:
+  ```C++
+  last_time = millis();
+  ```
+  - replace the **loop** function:
+  ```C++
+  if ( millis() - last_time > interval) {
+    Serial.print(Time.timeStr() + ": Analog reading = ");
+    Serial.println(cds_reading);
+    last_time = millis();
+  }
+  cds_reading = analogRead(cds_pin);
+  int led_brightness = map(cds_reading, 0, 4095, 0, 255);
+  analogWrite(led_pin, led_brightness);
+  ```
 
 ## Exercise #4: Logging data
 
+### Exposing variables
 
+- make a variable available:
+  - in the **setup** function, add:
+  ```C++
+  Particle.variable("cds", cds_reading);
+  ```
+- once flashed, use the `Particle` --> `Show cloud variables` in the cloud IDE (may take a minute to update) OR call `particle list` to see your device variables in the terminal, and then `particle variable get NAME cds` to retrieve the latest value (with NAME your device name)
 
+### Publishing values
+
+- publish information to the cloud
+  - in the **loop** function, *inside your interval if statement*, add:
+  ```C++
+  char data[20];
+  snprintf(data, sizeof(data), "%d", cds_reading);
+  bool success = Particle.publish("cds", data);
+  (success) ? Serial.println(" logged.") : Serial.println("log failed.");
+  ```
+  - you may want to adjust the interval to a little less frequent e.g. 3s
+  - once flashed, check the device's output on your [particle console](https://console.particle.io)
 
 ## Miscellaneous Information
 
