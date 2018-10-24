@@ -51,16 +51,16 @@ Connect to your photon and set up the wireless. Note that all course photons hav
 - take a look at the created folder to figure out its structure
 - in the new `src/???.ino` file, add the following code:
   - in the **setup** function:
-  ```C++
-  pinMode(D7, OUTPUT);
-  ```
+    ```C++
+    pinMode(D7, OUTPUT);
+    ```
   - in the **loop** function:
-  ```C++
-  digitalWrite(D7, HIGH);
-  delay(1000);
-  digitalWrite(D7, LOW);
-  delay(1000);
-  ```
+    ```C++
+    digitalWrite(D7, HIGH);
+    delay(1000);
+    digitalWrite(D7, LOW);
+    delay(1000);
+    ```
 
 ## Compile & Flash a program
 
@@ -83,21 +83,20 @@ While your photon can run on its own away from your computer and you can flash c
 
 - modify your blinking program as follows:
   - in the **setup** function:
-  ```C++
-  Serial.begin(9600);
-  pinMode(D7, OUTPUT);
-  Serial.println("INFO: setup complete");
-  ```
+    ```C++
+    Serial.begin(9600);
+    pinMode(D7, OUTPUT);
+    Serial.println("INFO: setup complete");
+    ```
   - in the **loop** function:
-  ```C++
-  Serial.println("ON at " + Time.timeStr());
-  digitalWrite(D7, HIGH);
-  delay(1000);
-
-  Serial.println("OFF at " + Time.timeStr());
-  digitalWrite(D7, LOW);
-  delay(1000);
-  ```
+    ```C++
+    Serial.println("ON at " + Time.timeStr());
+    digitalWrite(D7, HIGH);
+    delay(1000);
+    Serial.println("OFF at " + Time.timeStr());
+    digitalWrite(D7, LOW);
+    delay(1000);
+    ```
 - compile & flash the new program
 - start your serial monitor with the **Show Serial Monitor** button in the Particle IDE and hit **Connect**
 - alternatively, run `particle serial monitor` from the terminal
@@ -109,20 +108,20 @@ While your photon can run on its own away from your computer and you can flash c
   ![](images/light_sensor_sketch.png)
 - modify your program as follows:
   - outside functions, add:
-  ```C++
-  const int cds_pin = A0;
-  int cds_reading;
-  ```
+    ```C++
+    const int cds_pin = A0;
+    int cds_reading;
+    ```
   - in the **setup** function, add:
-  ```C++
-  pinMode(cds_pin, INPUT);
-  ```
+    ```C++
+    pinMode(cds_pin, INPUT);
+    ```
   - in the **loop** function, add:
-  ```C++
-  cds_reading = analogRead(cds_pin);
-  Serial.print("Analog reading = ");
-  Serial.println(cds_reading);
-  ```
+    ```C++
+    cds_reading = analogRead(cds_pin);
+    Serial.print("Analog reading = ");
+    Serial.println(cds_reading);
+    ```
 
 ## Exercise #3: Reporting data
 
@@ -132,52 +131,52 @@ While your photon can run on its own away from your computer and you can flash c
   ![](images/light_sensor_led_sketch.png)
 - modify your program as follows to turn the LED on at full strength (if your resistor is too weak it may burn out, if it is too strong it will be very dim)
   - outside functions, add:
-  ```C++
-  const int led_pin = D0;
-  ```
+    ```C++
+    const int led_pin = D0;
+    ```
   - in the **setup** function, add:
-  ```C++
-  pinMode(led_pin, OUTPUT);
-  digitalWrite(led_pin, HIGH);
-  ```
+    ```C++
+    pinMode(led_pin, OUTPUT);
+    digitalWrite(led_pin, HIGH);
+    ```
 - flash and make sure LED lights up, otherwise may need to swap the leads (diodes only work one way)
 - have LED reflect the photo sensor reading:
   - in the **loop** function, add:
-  ```C++
-  int led_brightness = map(cds_reading, 0, 4095, 0, 255);
-  analogWrite(led_pin, led_brightness);
-  ```
+    ```C++
+    int led_brightness = map(cds_reading, 0, 4095, 0, 255);
+    analogWrite(led_pin, led_brightness);
+    ```
 
 ### Interval based events
 - switch to interval based events instead of `delay`
   - outside functions, add:
-  ```C++
-  const uint interval = 1000;
-  unsigned long last_time;
-  ```
+    ```C++
+    const uint interval = 1000;
+    unsigned long last_time;
+    ```
   - in the **setup** function, add:
-  ```C++
-  last_time = millis();
-  ```
-  - replace the **loop** function:
-  ```C++
-  if ( millis() - last_time > interval) {
-    Serial.print(Time.timeStr() + ": Analog reading = ");
-    Serial.println(cds_reading);
+    ```C++
     last_time = millis();
-  }
-  cds_reading = analogRead(cds_pin);
-  int led_brightness = map(cds_reading, 0, 4095, 0, 255);
-  analogWrite(led_pin, led_brightness);
-  ```
+    ```
+  - replace the **loop** function:
+    ```C++
+    if ( millis() - last_time > interval) {
+      Serial.print(Time.timeStr() + ": Analog reading = ");
+      Serial.println(cds_reading);
+      last_time = millis();
+    }
+    cds_reading = analogRead(cds_pin);
+    int led_brightness = map(cds_reading, 0, 4095, 0, 255);
+    analogWrite(led_pin, led_brightness);
+    ```
 
 ### Exposing variables
 
 - make a variable available:
   - in the **setup** function, add:
-  ```C++
-  Particle.variable("cds", cds_reading);
-  ```
+    ```C++
+    Particle.variable("cds", cds_reading);
+    ```
 - once flashed, use the `Particle` --> `Show cloud variables` in the cloud IDE (may take a minute to update) OR call `particle list` to see your device variables in the terminal, and then `particle variable get NAME cds` to retrieve the latest value (with NAME your device name)
 
 
