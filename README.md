@@ -29,10 +29,11 @@ Note: technically you only need the CLI and can do everything from command line 
 Connect to your photon and set up the wireless. Note that all course photons have been white-listed with OIT in advance so you can use them on the regular `UCB Wirless` network without a network password. Also note that you can only claim/setup a photon if it is not already claimed (i.e. associated with another account) for security reasons, and if it is in listening mode (blinking dark blue).
 
 - via CLI (from terminal):
-  - `particle login` (if you are not already logged in)
-  - `particle setup` (follow steps)
-  - once it says *Attempting to verify the Photon's connection to the cloud...*, reconnect your computer to the UCB Wireless network (it may reconnect automatically on some operating systems but not all)
-- alternatively, [via smartphone](https://docs.particle.io/guide/getting-started/start/photon/#step-2b-connect-your-photon-to-the-internet-using-your-smartphone)
+  - run `particle login`
+  - Note: if the `particle` executable is not available in your terminal, it may not be in your path - you can either call it directly from its location (on MacOS e.g. `/usr/local/bin/particle`) or follow the [advanced installation instructions](https://docs.particle.io/guide/tools-and-features/cli/photon/#advanced-install)
+  - run `particle setup` (follow steps, if there are problems connecting to photon by wireless, try again)
+  - once it says *Attempting to verify the Photon's connection to the cloud...*, reconnect your computer to the UCB Wireless network (it may reconnect automatically on some operating systems but not all) and then you can name your device (you can change this later in [your particle account](https://build.particle.io))
+- alternatively, [via smartphone](https://docs.particle.io/guide/getting-started/start/photon/#step-2b-connect-your-photon-to-the-internet-using-your-smartphone) (trickier if there is a lot of unclaimed photons nearby)
 - Note: the [web setup](https://setup.particle.io/) does not work with UCB Wireless
 
 ## Test your photon
@@ -74,6 +75,7 @@ Connect to your photon and set up the wireless. Note that all course photons hav
 - compile & flash in one step (if compile is successful)
   - this is the default of the **lightning** button if there isn't already a `.bin` file
   - from the terminal: `particle flash NAME`, i.e. flash without specifying a `.bin` file
+- Note: if the program doesn't seem to flash, make sure to delete residual `.bin` files floating around because the wrong ones may get flashed unintentionally
 
 ## Exercise #1: Serial output
 
@@ -103,7 +105,8 @@ While your photon can run on its own away from your computer and you can flash c
 
 ## Exercise #2: Reading analog data
 
-- assemble the photosensor circuit as discussed in class.
+- assemble the photosensor circuit as discussed in class (use a 10kOhm resistor)
+  ![](images/light_sensor_sketch.png)
 - modify your program as follows:
   - outside functions, add:
   ```C++
@@ -121,12 +124,13 @@ While your photon can run on its own away from your computer and you can flash c
   Serial.println(cds_reading);
   ```
 
+## Exercise #3: Reporting data
 
-## Exercise #3: Reacting to analog data
+### LED indicator of brightness
 
-
-- add the LED circuit as discussed in class.
-- modify your program as follows:
+- add the LED circuit as discussed in class with the right resistors in place (aim for 20mA current; the voltage drop across the red LEDs is about 1.8V, yellow LEDs about 2.0V and green LEDs about 3.0V; the supply voltage from the D0 pin is 3.3V)
+  ![](images/light_sensor_led_sketch.png)
+- modify your program as follows to turn the LED on at full strength (if your resistor is too weak it may burn out, if it is too strong it will be very dim)
   - outside functions, add:
   ```C++
   const int led_pin = D0;
@@ -134,13 +138,18 @@ While your photon can run on its own away from your computer and you can flash c
   - in the **setup** function, add:
   ```C++
   pinMode(led_pin, OUTPUT);
+  digitalWrite(led_pin, HIGH);
   ```
+- flash and make sure LED lights up, otherwise may need to swap the leads (diodes only work one way)
+- have LED reflect the photo sensor reading:
   - in the **loop** function, add:
   ```C++
   int led_brightness = map(cds_reading, 0, 4095, 0, 255);
   analogWrite(led_pin, led_brightness);
   ```
-- switch to interval based events instead of delay
+
+### Interval based events
+- switch to interval based events instead of `delay`
   - outside functions, add:
   ```C++
   const uint interval = 1000;
@@ -162,8 +171,6 @@ While your photon can run on its own away from your computer and you can flash c
   analogWrite(led_pin, led_brightness);
   ```
 
-## Exercise #4: Logging data
-
 ### Exposing variables
 
 - make a variable available:
@@ -173,31 +180,8 @@ While your photon can run on its own away from your computer and you can flash c
   ```
 - once flashed, use the `Particle` --> `Show cloud variables` in the cloud IDE (may take a minute to update) OR call `particle list` to see your device variables in the terminal, and then `particle variable get NAME cds` to retrieve the latest value (with NAME your device name)
 
-### Publishing values
-
-- publish information to the cloud
-  - in the **loop** function, *inside your interval if statement*, add:
-  ```C++
-  char data[20];
-  snprintf(data, sizeof(data), "%d", cds_reading);
-  bool success = Particle.publish("cds", data);
-  (success) ? Serial.println(" logged.") : Serial.println("log failed.");
-  ```
-  - you may want to adjust the interval to a little less frequent e.g. 3s
-  - once flashed, check the device's output on your [particle console](https://console.particle.io)
 
 ## Miscellaneous Information
-
-### How to add library
-
-- use the **Browse and manage Particle libraries** button to search for libraries of interest and add them to your project
-- alternatively:
-  - search for a library in the terminal, e.g. `particle library search LiquidCrystal`
-  - add a library in the terminal `particle library add LiquidCrystal_I2C_Spark`
-- check your `project.properties` file to see all dependencies
-- add include statement to your `.ino` file, e.g. `#include "LiquidCrystal_I2C_Spark.h"`
-- Note: to include a local copy of the source code of a library (e.g. for extension or other modifications), use the following command: `particle library copy LiquidCrystal_I2C_Spark` which will add it to the `lib` folder. This can be useful even just to look at the code or the examples that are usually provided with any library and you can remove the library simply by deleting the entire library folder (or the line in `project.properties` if using a remote copy).
-
 
 ### How to register a new photon with OIT
 
